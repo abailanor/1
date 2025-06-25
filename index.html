@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>大学生选课系统</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .login-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+        }
+        
+        .main-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            margin-top: 20px;
+        }
+        
+        .nav-tabs .nav-link {
+            border: none;
+            color: #6c757d;
+            border-radius: 10px;
+            margin: 0 5px;
+        }
+        
+        .nav-tabs .nav-link.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+        }
+        
+        .card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            transition: transform 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 10px;
+            padding: 10px 25px;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .table {
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        .alert {
+            border-radius: 10px;
+            border: none;
+        }
+        
+        .form-control {
+            border-radius: 10px;
+            border: 2px solid #e9ecef;
+        }
+        
+        .form-control:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        }
+        
+        .student-info {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .feature-card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .spinner-border {
+            color: #667eea;
+        }
+    </style>
+</head>
+<body>
+    <!-- 登录界面 -->
+    <div id="loginSection" class="container-fluid d-flex align-items-center justify-content-center" style="min-height: 100vh;">
+        <div class="login-container p-5" style="max-width: 400px;">
+            <div class="text-center mb-4">
+                <i class="fas fa-graduation-cap fa-3x text-primary mb-3"></i>
+                <h2 class="fw-bold">大学生选课系统</h2>
+                <p class="text-muted">请使用学号登录</p>
+            </div>
+            
+            <form id="loginForm">
+                <div class="mb-3">
+                    <label for="studentId" class="form-label">学号</label>
+                    <input type="text" class="form-control" id="studentId" placeholder="请输入学号" required>
+                </div>
+                <div class="mb-3">
+                    <label for="idCard" class="form-label">身份证号</label>
+                    <input type="password" class="form-control" id="idCard" placeholder="请输入身份证号" required>
+                </div>
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="fas fa-sign-in-alt me-2"></i>登录
+                </button>
+            </form>
+            
+            <div id="loginAlert" class="alert alert-danger mt-3" style="display: none;"></div>
+        </div>
+    </div>
+
+    <!-- 主界面 -->
+    <div id="mainSection" class="container-fluid" style="display: none;">
+        <!-- 学生信息栏 -->
+        <div class="student-info">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <h4><i class="fas fa-user me-2"></i>欢迎，<span id="studentName"></span></h4>
+                    <p class="mb-0">学号：<span id="studentIdDisplay"></span> | 院系：<span id="studentDept"></span></p>
+                </div>
+                <div class="col-md-6 text-end">
+                    <button class="btn btn-light" onclick="logout()">
+                        <i class="fas fa-sign-out-alt me-2"></i>退出登录
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 功能导航 -->
+        <div class="main-container p-4">
+            <ul class="nav nav-tabs mb-4" id="mainTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="courses-tab" data-bs-toggle="tab" data-bs-target="#courses" type="button" role="tab">
+                        <i class="fas fa-book me-2"></i>选课管理
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="friends-tab" data-bs-toggle="tab" data-bs-target="#friends" type="button" role="tab">
+                        <i class="fas fa-users me-2"></i>好友管理
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="messages-tab" data-bs-toggle="tab" data-bs-target="#messages" type="button" role="tab">
+                        <i class="fas fa-comments me-2"></i>消息中心
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="transfer-tab" data-bs-toggle="tab" data-bs-target="#transfer" type="button" role="tab">
+                        <i class="fas fa-exchange-alt me-2"></i>转账功能
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="admin-tab" data-bs-toggle="tab" data-bs-target="#admin" type="button" role="tab">
+                        <i class="fas fa-cog me-2"></i>管理员
+                    </button>
+                </li>
+            </ul>
+
+            <div class="tab-content" id="mainTabContent">
+                <!-- 选课管理 -->
+                <div class="tab-pane fade show active" id="courses" role="tabpanel">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="feature-card">
+                                <h5><i class="fas fa-plus-circle me-2"></i>选择课程</h5>
+                                <div class="mb-3">
+                                    <label for="courseSelect" class="form-label">选择课程</label>
+                                    <select class="form-select" id="courseSelect">
+                                        <option value="">请选择课程...</option>
+                                    </select>
+                                </div>
+                                <button class="btn btn-primary" onclick="enrollCourse()">
+                                    <i class="fas fa-plus me-2"></i>选课
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="feature-card">
+                                <h5><i class="fas fa-list me-2"></i>已选课程</h5>
+                                <div id="enrolledCourses"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 好友管理 -->
+                <div class="tab-pane fade" id="friends" role="tabpanel">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="feature-card">
+                                <h5><i class="fas fa-user-plus me-2"></i>添加好友</h5>
+                                <div class="mb-3">
+                                    <label for="friendId" class="form-label">好友学号</label>
+                                    <input type="text" class="form-control" id="friendId" placeholder="请输入学号">
+                                </div>
+                                <button class="btn btn-primary" onclick="addFriend()">
+                                    <i class="fas fa-plus me-2"></i>添加好友
+                                </button>
+                            </div>
+                            
+                            <div class="feature-card">
+                                <h5><i class="fas fa-lightbulb me-2"></i>好友推荐</h5>
+                                <button class="btn btn-outline-primary" onclick="getRecommendations()">
+                                    <i class="fas fa-magic me-2"></i>获取推荐
+                                </button>
+                                <div id="recommendations" class="mt-3"></div>
+                            </div>
+                        </div>
+                        <div class="col-md-8">
+                            <div class="feature-card">
+                                <h5><i class="fas fa-users me-2"></i>好友列表</h5>
+                                <div id="friendsList"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 消息中心 -->
+                <div class="tab-pane fade" id="messages" role="tabpanel">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="feature-card">
+                                <h5><i class="fas fa-paper-plane me-2"></i>发送消息</h5>
+                                <div class="mb-3">
+                                    <label for="messageTo" class="form-label">接收方学号</label>
+                                    <input type="text" class="form-control" id="messageTo" placeholder="请输入学号">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="messageContent" class="form-label">消息内容</label>
+                                    <textarea class="form-control" id="messageContent" rows="3" placeholder="请输入消息内容"></textarea>
+                                </div>
+                                <button class="btn btn-primary" onclick="sendMessage()">
+                                    <i class="fas fa-paper-plane me-2"></i>发送
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-md-8">
+                            <div class="feature-card">
+                                <h5><i class="fas fa-inbox me-2"></i>消息记录</h5>
+                                <div id="messagesList"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 转账功能 -->
+                <div class="tab-pane fade" id="transfer" role="tabpanel">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="feature-card">
+                                <h5><i class="fas fa-money-bill-wave me-2"></i>转账</h5>
+                                <div class="mb-3">
+                                    <label for="transferTo" class="form-label">接收方学号</label>
+                                    <input type="text" class="form-control" id="transferTo" placeholder="请输入学号">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="transferAmount" class="form-label">转账金额</label>
+                                    <input type="number" class="form-control" id="transferAmount" placeholder="请输入金额" step="0.01">
+                                </div>
+                                <button class="btn btn-primary" onclick="transferMoney()">
+                                    <i class="fas fa-exchange-alt me-2"></i>转账
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-md-8">
+                            <div class="feature-card">
+                                <h5><i class="fas fa-history me-2"></i>转账记录</h5>
+                                <div id="transfersList"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 管理员功能 -->
+                <div class="tab-pane fade" id="admin" role="tabpanel">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="feature-card">
+                                <h5><i class="fas fa-database me-2"></i>数据库管理</h5>
+                                <div class="mb-3">
+                                    <label for="tableSelect" class="form-label">选择表</label>
+                                    <select class="form-select" id="tableSelect">
+                                        <option value="">请选择表...</option>
+                                    </select>
+                                </div>
+                                <button class="btn btn-primary" onclick="loadTableData()">
+                                    <i class="fas fa-eye me-2"></i>查看数据
+                                </button>
+                            </div>
+                            <!-- 消息全文检索 -->
+                            <div class="feature-card mt-4">
+                                <h5><i class="fas fa-search me-2"></i>消息全文检索</h5>
+                                <div class="mb-2">
+                                    <input type="text" id="searchKeyword" class="form-control" placeholder="输入消息关键词">
+                                </div>
+                                <div class="mb-2">
+                                    <input type="text" id="searchFromStuId" class="form-control" placeholder="可选：发信学生学号">
+                                </div>
+                                <button class="btn btn-primary w-100" onclick="adminSearchMessage()">全文检索</button>
+                            </div>
+                        </div>
+                        <div class="col-md-9">
+                            <div class="feature-card">
+                                <h5><i class="fas fa-table me-2"></i>表数据</h5>
+                                <div class="mb-2 d-flex justify-content-between align-items-center">
+                                    <button class="btn btn-success btn-sm" id="addRowBtn" style="display:none;"><i class="fas fa-plus me-1"></i>新增</button>
+                                    <span id="tableInfo" class="text-muted"></span>
+                                </div>
+                                <div id="tableData"></div>
+                            </div>
+                            <!-- 新增：检索结果展示区 -->
+                            <div class="feature-card mt-4">
+                                <h5><i class="fas fa-list me-2"></i>检索结果</h5>
+                                <div id="searchResults"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 加载提示 -->
+    <div id="loading" class="loading">
+        <div class="spinner-border" role="status">
+            <span class="visually-hidden">加载中...</span>
+        </div>
+        <p class="mt-2">加载中...</p>
+    </div>
+
+    <!-- 消息提示 -->
+    <div id="alertContainer" style="position: fixed; top: 20px; right: 20px; z-index: 9999;"></div>
+
+    <!-- 新增数据弹窗 -->
+    <div class="modal fade" id="addRowModal" tabindex="-1" aria-labelledby="addRowModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="addRowModalLabel">新增数据</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <form id="addRowForm"></form>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+            <button type="submit" class="btn btn-primary" id="addRowSubmitBtn">提交</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html> 
